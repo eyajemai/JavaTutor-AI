@@ -1,0 +1,486 @@
+{
+  "name": "Agent IA project",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "b7c93bd2-3086-4a86-b6ed-6d198de0fdde",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Crawl the Java course available at https://www.learnjavaonline.org/en/\nDiscover the course structure and retrieve the relevant educational pages, including lessons, explanations, examples, exercises, and code related to Java programming.\nFocus only on the Java course content of this website.",
+        "options": {
+          "systemMessage": "You are a Web Research and Knowledge Ingestion Agent specialized in Java programming.\n\nYour role is to discover, retrieve, and extract reliable educational content from the target Java course website using the Firecrawl tools available through MCP.\n\nYour goal is NOT to answer the student's question directly. Your goal is to collect high-quality source material that will later be processed, embedded, and stored in a vector database for a RAG system.\n\n## AVAILABLE TOOLS\n\nYou have access to Firecrawl tools through MCP, including tools for:\n\n- web search\n- scraping individual pages\n- mapping websites\n- crawling multiple pages\n- extracting web content\n\nChoose the most appropriate tool for the task.\n\n## TOOL SELECTION\n\nUse Search when:\n- you need to find a Java course or a specific Java topic\n- you need to locate relevant pages on the web\n\nUse Map when:\n- you need to discover the structure and URLs of a website\n- you need to identify relevant pages before crawling\n\nUse Crawl when:\n- you need to retrieve content from multiple pages of the same website\n- you need to collect a large portion of a Java course\n\nUse Scrape when:\n- you already know the exact URL\n- you need detailed content from one specific page\n\n## CONTENT SELECTION\n\nPrioritize:\n\n- Java lessons\n- Java concepts\n- Java syntax\n- Java examples\n- Java exercises\n- Java explanations\n- Java tutorials\n- Java documentation relevant to learning\n\nIgnore:\n\n- advertisements\n- login pages\n- navigation-only pages\n- cookie notices\n- unrelated content\n- external websites unless they are explicitly relevant\n- duplicate pages\n\n## SOURCE RESTRICTION\n\nWhen a specific course website is provided, prioritize that website and its internal pages.\n\nDo not randomly search unrelated websites when the requested information is available on the target course website.\n\n## DATA QUALITY\n\nExtract meaningful educational content rather than merely returning navigation links.\n\nPreserve:\n\n- page title\n- page URL\n- headings\n- explanations\n- examples\n- exercises\n- relevant code\n- important metadata\n\nAvoid inventing information.\n\nDo not modify the meaning of the source content.\n\n## OUTPUT\n\nReturn the retrieved information in a structured form whenever possible.\n\nFor each source, preserve:\n\n- title\n- URL\n- source website\n- topic\n- content\n- source type\n\nThe resulting content will be passed to a downstream text-processing, chunking, embedding, and vector-storage workflow.\n\n## IMPORTANT\n\nDo not answer using your own knowledge when the requested information cannot be found.\n\nIf the website cannot be accessed or the relevant content cannot be found, clearly report that.\n\nYour primary objective is reliable web knowledge acquisition for a Java RAG knowledge base."
+        }
+      },
+      "id": "8384087c-526d-4c09-a69f-c1059c5cd155",
+      "name": "AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -272,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "c2e1949b-e089-4c40-b338-20398ff5006f",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -192,
+        1152
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "b6AaMv38YFD3YIDB",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://mcp.firecrawl.dev/v2/mcp-oauth",
+        "authentication": "bearerAuth",
+        "options": {}
+      },
+      "id": "ef58ed96-1402-40e6-a901-7d368fe8cc3e",
+      "name": "MCP Client",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.4,
+      "position": [
+        -128,
+        224
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "Z3oFl20j0cwxjFUG",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "embeddingBatchSize": 50,
+        "options": {}
+      },
+      "id": "c256a837-a11e-420a-a939-732f06ffeb9c",
+      "name": "Supabase Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        448
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "fPBiCoK977fESOpa",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "88429a51-98e0-4512-b4ce-7dc9482e1bb1",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        688
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "b6AaMv38YFD3YIDB",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "id": "a618b95e-e336-4fd7-b8e0-675a7c9c97a3",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        464,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "id": "f8ffcaba-f1d3-4830-b47a-d5e0dc9d314a",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        544,
+        944
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "0B6xeB9nZ-6_IVGgtbVd1QXQyRkk",
+          "mode": "list",
+          "cachedResultName": "Java A Beginner's Guide, 6th Edition (PDF).pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/0B6xeB9nZ-6_IVGgtbVd1QXQyRkk/view?usp=drivesdk&resourcekey=0-f_lIDOE6JqDs9e2UFunp5w"
+        },
+        "options": {}
+      },
+      "id": "971f6913-48f1-441e-a1e8-4637d4563504",
+      "name": "Download file",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -208,
+        560
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "LyIhNX00lmnGPjXs",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "79eaa328-641a-4c7a-bb8c-07843ec5fd17",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c879f38f-bfca-4265-afec-f8a263eba7bc",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -400,
+        912
+      ],
+      "webhookId": "1ae4abef-10f4-4b9d-8827-36ccc6da998d"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a document-based assistant.\n \nFor every user question related to the knowledge base, you MUST first use\nthe Supabase vector store tool to retrieve relevant documents.\n \nBase your answer primarily on the retrieved documents.\n \nDo not answer from your own knowledge when the question can be answered\nusing the knowledge base.\n \nIf no relevant information is found in the documents, tell the user that\nthe information was not found in the knowledge base.\n"
+        }
+      },
+      "id": "b9db30e1-84b0-4250-86af-5be9b162880b",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -176,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search the uploaded Python course documents stored in Supabase.\nUse this tool whenever the user asks a question about Python, programming,\nthe course material, or information contained in the uploaded documents.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "id": "90b247ad-39b3-43ff-b71c-eb06b1ef4380",
+      "name": "Supabase Vector Store1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        992
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "fPBiCoK977fESOpa",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-3.5-flash",
+        "options": {
+          "maxTokens": 3700
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        1328
+      ],
+      "id": "2bdd0b4c-13df-4abb-882a-fd060adc5f67",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "TtppmyDlbzpesm1k",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "nvidia/llama-3.2-nv-embedqa-1b-v2"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsNvidia",
+      "typeVersion": 1,
+      "position": [
+        112,
+        1312
+      ],
+      "id": "6d9586e7-c3ad-4b59-b369-576d06fc3aa8",
+      "name": "NVIDIA Nemotron Embeddings",
+      "credentials": {
+        "nvidiaApi": {
+          "id": "omqSOvzcMcDDand3",
+          "name": "NVIDIA Nemotron account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -288,
+        208
+      ],
+      "id": "49c99d1a-5661-4ba4-8670-bbcbf44d9057",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "dIpD2joFrByhoaqC",
+          "name": "OpenAI account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "NVIDIA Nemotron Embeddings": {
+      "ai_embedding": [
+        []
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
